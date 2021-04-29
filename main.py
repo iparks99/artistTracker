@@ -11,6 +11,15 @@ except EnvironmentError:
     artists = {}
     print("No artists.json file found")
 
+try:
+    with open("spotify.config", "r") as f:
+        config = json.loads(f.read())
+        os.environ['SPOTIPY_CLIENT_ID'] = config['SPOTIPY_CLIENT_ID']
+        os.environ['SPOTIPY_CLIENT_SECRET'] = config['SPOTIPY_CLIENT_SECRET']
+        f.close()
+except EnvironmentError:
+    print("No spotify config file found")
+
 spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
 changes = False
 

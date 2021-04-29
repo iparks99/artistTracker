@@ -1,3 +1,9 @@
+# Spotify config file
+spotify.config
+
+# Artists file
+artists.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
