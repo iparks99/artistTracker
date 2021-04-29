@@ -46,3 +46,4 @@ if changes:
     x = json.dumps(artists)
     f.write(x)
     f.close()
+    input()
