@@ -3,8 +3,10 @@ import os
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 try:
-    with open("artists.json", "r") as f:
+    with open(os.path.join(__location__, "artists.json"), "r") as f:
         artists = json.loads(f.read())
         f.close()
 except EnvironmentError:
@@ -12,7 +14,7 @@ except EnvironmentError:
     print("No artists.json file found")
 
 try:
-    with open("spotify.config", "r") as f:
+    with open(os.path.join(__location__, "spotify.config"), "r") as f:
         config = json.loads(f.read())
         os.environ['SPOTIPY_CLIENT_ID'] = config['SPOTIPY_CLIENT_ID']
         os.environ['SPOTIPY_CLIENT_SECRET'] = config['SPOTIPY_CLIENT_SECRET']
@@ -40,8 +42,7 @@ for artist, album_list in artists.items():
     artists.update({artist: album_list})
 
 if changes:
-    print("Updating artists.json")
-    f = open("artists.json", "w")
+    f = open(os.path.join(__location__, "artists.json"), "w")
     x = json.dumps(artists)
     f.write(x)
     f.close()
