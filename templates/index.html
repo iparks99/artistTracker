@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Artist Tracker</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+    <style>
+        table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 100%;
+        }
+        
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+        }
+        
+        tr:nth-child(odd) {
+          background-color: #dddddd;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Artist Tracker</h1>
+    <form id="artistlookup" action="/search" method="post">
+        <input type="text" name="artistname" id="artistname" />
+        <br />
+        <input type="submit" value="Search for artist"/>
+        <div id='response'>
+            <table id='artists'>
+            </table>
+        </div>
+    </form>
+
+    <script>
+        (function() {
+            // document.write("hello")
+            $("#artistlookup").submit(function(event) {
+                event.preventDefault();
+                $.ajax({
+                    url: '/search',
+                    type: 'post',
+                    data: $(this).serialize()
+                }).done(function(response) {
+                    $("#artists > tr").remove();
+                    for (let i = 0; i < response.items.length; i++) {
+                        $("#artists").append($('<tr>').append($('<td>').append($('<img>')
+                            .attr('src', response.items[i].images[0].url)
+                            .attr('width', '150px')
+                            .attr('height', '150px')
+                            )).append($('<td>').append($('<p>').append(response.items[i]['name'])))
+                                .append($('<td>').append($('<p>').append(response.items[i]['uri'])))
+                                    .append($('<td>').append($('<button>')
+                                        .attr('name', 'bandbutton')
+                                        .attr('type', 'button').append('Select'))));
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>
