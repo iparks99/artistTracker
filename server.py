@@ -14,6 +14,41 @@ except EnvironmentError:
     print("No spotify config file found")
 spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
 
+@app.route('/followedartists', methods=['GET', 'POST'])
+def renderFollowedArtists():
+    if request.method == 'GET':
+        return render_template('index.html')
+    try:
+        with open(os.path.join(__location__, "artists.json"), "r") as f:
+            artists = json.loads(f.read())
+            f.close()
+            r = spotify.artists(artists)
+            return r
+    except EnvironmentError:
+        return "Error: Could not open artists.json"
+
+@app.route('/viewartist/albums', methods=['GET', 'POST'])
+def renderViewArtistAlbums():
+    if request.method == 'GET':
+        return render_template('index.html')
+    if 'artisturi' in request.form:
+        uri = request.form.get('artisturi')
+        r = spotify.artist_albums(uri)
+        return r
+    else:
+        return "Error: no artist uri given"
+
+@app.route('/viewartist', methods=['GET', 'POST'])
+def renderViewArtist():
+    if request.method == 'GET':
+        return render_template('index.html')
+    if 'artisturi' in request.form:
+        uri = request.form.get('artisturi')
+        r = spotify.artist(uri)
+        return r
+    else:
+        return "Error: No artist uri given"
+
 @app.route('/search', methods=['GET', 'POST'])
 def renderSearch():
     if request.method == 'GET':

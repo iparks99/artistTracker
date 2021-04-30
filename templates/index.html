@@ -6,38 +6,183 @@
 
     <style>
         table {
-          font-family: arial, sans-serif;
-          border-collapse: collapse;
-          width: 100%;
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
         }
         
         td, th {
-          border: 1px solid #dddddd;
-          text-align: left;
-          padding: 8px;
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
         }
         
         tr:nth-child(odd) {
-          background-color: #dddddd;
+            background-color: #dddddd;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f1f1f1;
+        }
+
+        body {
+            background-color: #818181;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+        h2 {
+            color: #f1f1f1;
+            font-size: 5em;
+            padding: 10px;
+        }
+
+         /* The sidebar menu */
+        .sidenav {
+            height: 100%; /* Full-height: remove this if you want "auto" height */
+            width: 200px; /* Set the width of the sidebar */
+            position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+            z-index: 1; /* Stay on top */
+            top: 0; /* Stay at the top */
+            left: 0;
+            background-color: rgb(14, 209, 79);
+            overflow-x: hidden; /* Disable horizontal scroll */
+            padding-top: 10px;
+            padding-left: 3px;
+        }
+
+        /* The navigation menu links */
+        .sidenav a {
+            padding-left: 5px;
+            padding-right:16px;
+            text-decoration: none;
+            font-size: 15px;
+            overflow-wrap: break-word;
+            color: #818181;
+        }
+
+        /* When you mouse over the navigation links, change their color */
+        .sidenav a:hover {
+            color: #f1f1f1;
+        }
+
+        .sidenav > .sidenavcontainer {
+            display: flex;
+            align-items: center;
+            padding: 5px;
+        }
+
+        /* Style page content */
+        .mainview {
+            margin-left: 200px; /* Same as the width of the sidebar */
+            padding: 0px 10px;
+        }
+
+        /* Album buttons */
+        .albumbutton {
+            width: 159px;
+            height: 212px;
+            position: relative;
+            float: left;
+        }
+
+        .albumbutton:hover > .overlay {
+            transition: .5s ease;
+            width: 100%;
+            height: 75%;
+            position: absolute;
+            background-color: #000;
+            opacity: 0.5;
+            padding: 10px;
+            border-radius: 30px;
+        }
+
+        /* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
+        @media screen and (max-height: 450px) {
+            .sidenav {padding-top: 15px;}
+            .sidenav a {font-size: 18px;}
         }
     </style>
 </head>
 
 <body>
-    <h1>Artist Tracker</h1>
-    <form id="artistlookup" action="/search" method="post">
-        <input type="text" name="artistname" id="artistname" />
-        <br />
-        <input type="submit" value="Search for artist"/>
-        <div id='response'>
-            <table id='artists'>
-            </table>
-        </div>
-    </form>
+    <div class="sidenav">
+        <h1 style='text-align: center;'>Artist Tracker</h1>
+        <h3>Followed Artists</h3>
+    </div>
+    <div class="mainview">
+        <form id="artistlookup" action="/search" method="post">
+            <input type="text" name="artistname" id="artistname" />
+            <input type="submit" value="Search for artist"/>
+            <div id='response' style="padding: 5px 0px;">
+                <table id='artists'>
+                </table>
+                <div id='viewartist'></div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function viewBandAlbums(uri) {
+            $.post('/viewartist/albums', {'artisturi' : uri}, (response) => {
+                response['items'].forEach(function(album) {
+                    $('#viewartist').append($('<div>')
+                        .attr('class', 'albumbutton')
+                        .attr('width', '150px')
+                        .attr('height', '150px')
+                        .append($('<div>')
+                            .attr('class', 'overlay'))
+                        .append($('<a>')
+                            .attr('href', album['external_urls']['spotify'])
+                        .append($('<img>')
+                            .attr('src', album['images'][0]['url'])
+                            .attr('width', '150px')
+                            .attr('height', '150px')
+                            .attr('style', 'position: relative; padding: 10px')))
+                        );
+                });
+            });
+        }
+
+        function viewBandOnClick(uri) {
+            $.post('/viewartist', {'artisturi' : uri}, (response) => {
+                $('#artists').hide();
+                $('#viewartist').html("");
+                $('#viewartist').show();
+                $('#viewartist').append($('<img>')
+                    .attr('src', response.images[0]['url'])
+                    .attr('width', '200px')
+                    .attr('height', '200px')
+                    .attr('style', 'padding: 10px; float: left'));
+                $('#viewartist').append($('<h2>').append(response['name']));
+                $('#viewartist').append($('<br/>'));
+                $('#viewartist').append($('<br/>'));
+                $('#viewartist').append($('<br/>'));
+                viewBandAlbums(uri);
+            });
+        }
+
+        function loadSidenav() {
+            $.post('/followedartists', {}, (response) => {
+                response['artists'].forEach(function(artist) {
+                    $(".sidenav").append($('<div>')
+                        .attr('class', 'sidenavcontainer')
+                        .append($('<img>')
+                            .attr('src', artist['images'][0]['url'])
+                            .attr('width', '50px')
+                            .attr('height', '50px'))
+                        .append($('<a>')
+                            .attr('class', 'sidenavartistlink')
+                            .attr('href', artist['external_urls']['spotify']).append(artist['name'])));
+                });
+            });
+        }
+    </script>
 
     <script>
         (function() {
-            // document.write("hello")
+
+            loadSidenav();
+
             $("#artistlookup").submit(function(event) {
                 event.preventDefault();
                 $.ajax({
@@ -45,20 +190,31 @@
                     type: 'post',
                     data: $(this).serialize()
                 }).done(function(response) {
+                    $('#artists').show();
+                    $('#viewartist').hide();
                     $("#artists > tr").remove();
                     for (let i = 0; i < response.items.length; i++) {
-                        $("#artists").append($('<tr>').append($('<td>').append($('<img>')
+                        $("#artists").append($('<tr>').append($('<td>')
+                            .attr('style', 'text-align: center').append($('<img>')
                             .attr('src', response.items[i].images[0].url)
                             .attr('width', '150px')
                             .attr('height', '150px')
                             )).append($('<td>').append($('<p>').append(response.items[i]['name'])))
                                 .append($('<td>').append($('<p>').append(response.items[i]['uri'])))
-                                    .append($('<td>').append($('<button>')
-                                        .attr('name', 'bandbutton')
-                                        .attr('type', 'button').append('Select'))));
+                                    .append($('<td>').attr('style', 'text-align: center').append($('<button>')
+                                        .attr('name', 'selectbandbutton')
+                                        .attr('type', 'button').append('Follow')))
+                                    .append($('<td>').attr('style', 'text-align: center').append($('<button>')
+                                        .attr('name', 'viewbandbutton')
+                                        .attr('type', 'button')
+                                        .click(function() {
+                                            viewBandOnClick(response.items[i]['uri']);
+                                        })
+                                        .append('View'))));
                     }
                 });
             });
+
         })();
     </script>
 </body>
