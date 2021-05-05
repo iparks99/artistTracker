@@ -14,6 +14,56 @@ except EnvironmentError:
     print("No spotify config file found")
 spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
 
+@app.route('/followedartists/follow', methods=['GET', 'POST'])
+def renderFollowArtist():
+    if request.method == 'GET':
+        return render_template('index.html')
+    if 'artisturi' not in request.form:
+        return "Error: no artist uri given"
+    uri = request.form.get('artisturi')
+    r = spotify.artist(uri)
+    if 'error' in r:
+        return "Error: Invalid artist uri"
+    try:
+        with open(os.path.join(__location__, "artists.json"), "r") as f:
+            artists = json.loads(f.read())
+            f.close()
+            if uri in artists:
+                return "Error: Already following artist"
+            else:
+                artists[uri] = []
+            x = json.dumps(artists)
+            f = open(os.path.join(__location__, "artists.json"), "w")
+            f.write(x)
+            f.close()
+            # print('/followedartists/follow: %s'%artists)
+            return "Success"
+    except EnvironmentError:
+        return "Error: Could not follow artist"
+
+@app.route('/followedartists/unfollow', methods=['GET', 'POST'])
+def renderUnfollowArtist():
+    if request.method == 'GET':
+        return render_template('index.html')
+    if 'artisturi' not in request.form:
+        return "Error: no artist uri given"
+    uri = request.form.get('artisturi')
+    try:
+        with open(os.path.join(__location__, "artists.json"), "r") as f:
+            artists = json.loads(f.read())
+            f.close()
+            if uri not in artists:
+                return "Error: User not following artist"
+            else:
+                del artists[uri]
+                x = json.dumps(artists)
+                f = open(os.path.join(__location__, "artists.json"), "w")
+                f.write(x)
+                f.close()
+                return "Success"
+    except EnvironmentError:
+        return "Error: Could not unfollow artist"
+
 @app.route('/followedartists', methods=['GET', 'POST'])
 def renderFollowedArtists():
     if request.method == 'GET':
@@ -21,6 +71,7 @@ def renderFollowedArtists():
     try:
         with open(os.path.join(__location__, "artists.json"), "r") as f:
             artists = json.loads(f.read())
+            # print('/followedartists: %s'%artists)
             f.close()
             r = spotify.artists(artists)
             return r

@@ -162,8 +162,13 @@
         }
 
         function loadSidenav() {
+
+            var artisturi = [];
+
             $.post('/followedartists', {}, (response) => {
+                // console.log(response['artists']);
                 response['artists'].forEach(function(artist) {
+                    artisturi.push(artist['uri']);
                     $(".sidenav").append($('<div>')
                         .attr('class', 'sidenavcontainer')
                         .append($('<img>')
@@ -175,13 +180,41 @@
                             .attr('href', artist['external_urls']['spotify']).append(artist['name'])));
                 });
             });
+
+            return artisturi;
+        }
+
+        function followArtist(uri) {
+            $.post('/followedartists/follow', {'artisturi' : uri}, (response) => {
+                if (response === 'Success') {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+        }
+
+        function unfollowArtist(uri) {
+            $.post('/followedartists/unfollow', {'artisturi' : uri}, (response) => {
+                return response === 'Success'
+            });
+        }
+
+        function buttonHandler(btn, following, uri) {
+            if (following) {
+                btn.innerHTML = "Unfollow";
+                unfollowArtist(uri);
+            } else {
+                btn.innerHTML = "Follow";
+                followArtist(uri);
+            }
         }
     </script>
 
     <script>
         (function() {
 
-            loadSidenav();
+            var artists = loadSidenav();
 
             $("#artistlookup").submit(function(event) {
                 event.preventDefault();
@@ -194,23 +227,41 @@
                     $('#viewartist').hide();
                     $("#artists > tr").remove();
                     for (let i = 0; i < response.items.length; i++) {
-                        $("#artists").append($('<tr>').append($('<td>')
-                            .attr('style', 'text-align: center').append($('<img>')
-                            .attr('src', response.items[i].images[0].url)
-                            .attr('width', '150px')
-                            .attr('height', '150px')
-                            )).append($('<td>').append($('<p>').append(response.items[i]['name'])))
-                                .append($('<td>').append($('<p>').append(response.items[i]['uri'])))
-                                    .append($('<td>').attr('style', 'text-align: center').append($('<button>')
-                                        .attr('name', 'selectbandbutton')
-                                        .attr('type', 'button').append('Follow')))
-                                    .append($('<td>').attr('style', 'text-align: center').append($('<button>')
+                        var row = $('<tr>').append($('<td>').append($('<p>').append(response.items[i]['name'])))
+                                .append($('<td>').append($('<p>').append(response.items[i]['uri'])));
+                        if (response.items[i].images.length) {
+                            var img = $('<td>')
+                                    .attr('style', 'text-align: center').append($('<img>')
+                                    .attr('src', response.items[i].images[0]['url'])
+                                    .attr('width', '150px')
+                                    .attr('height', '150px'));
+                            row.prepend(img);
+                        } else { continue; }
+                        
+                        var btn = $('<button>')
+                                .attr('name', 'selectbandbutton')
+                                .attr('type', 'button');
+                        var btnHome = $('<td>').attr('style', 'text-align: center')
+                            .append(btn);
+                        btn.click(function() {
+                               buttonHandler(this, artists.includes(response.items[i]['uri']), response.items[i]['uri']);
+                           });
+                        if (artists.includes(response.items[i]['uri'])) {
+                            btn.append('Unfollow')
+                        } else {
+                            btn.append('Follow')
+                        }
+                        row.append(btnHome);
+
+
+                        row.append($('<td>').attr('style', 'text-align: center').append($('<button>')
                                         .attr('name', 'viewbandbutton')
                                         .attr('type', 'button')
                                         .click(function() {
                                             viewBandOnClick(response.items[i]['uri']);
                                         })
-                                        .append('View'))));
+                                        .append('View')));
+                        $('#artists').append(row);
                     }
                 });
             });
