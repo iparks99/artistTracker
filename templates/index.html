@@ -189,12 +189,14 @@
 
         function followArtist(uri) {
             $.post('/followedartists/follow', {'artisturi' : uri}, (response) => {
+                loadSidenav();
                 return response === 'Success';
             });
         }
 
         function unfollowArtist(uri) {
             $.post('/followedartists/unfollow', {'artisturi' : uri}, (response) => {
+                loadSidenav();
                 return response === 'Success';
             });
         }
@@ -249,7 +251,6 @@
                         }
                         btn.click(function() {
                                buttonHandler(this, response.items[i]['uri']);
-                               loadSidenav();
                            });
                         row.append(btnHome);
 
