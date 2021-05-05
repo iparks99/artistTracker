@@ -1,4 +1,4 @@
-import json, os, spotipy
+import json, os, spotipy, time
 from flask import Flask, render_template, request
 from spotipy.oauth2 import SpotifyClientCredentials
 app = Flask(__name__)
@@ -25,17 +25,23 @@ def renderFollowArtist():
     if 'error' in r:
         return "Error: Invalid artist uri"
     try:
-        with open(os.path.join(__location__, "artists.json"), "r") as f:
+        with open(os.path.join(__location__, "artists.json"), "r+") as f:
+            print("[follow] opened artists.json")
             artists = json.loads(f.read())
-            f.close()
+            f.seek(0)
+            # f.close()
+            # print("[follow] closed artists.json")
             if uri in artists:
                 return "Error: Already following artist"
             else:
                 artists[uri] = []
             x = json.dumps(artists)
-            f = open(os.path.join(__location__, "artists.json"), "w")
+            # f = open(os.path.join(__location__, "artists.json"), "w")
+            # print("[follow] opened artists.json")
             f.write(x)
+            f.truncate()
             f.close()
+            print("[follow] closed artists.json")
             # print('/followedartists/follow: %s'%artists)
             return "Success"
     except EnvironmentError:
@@ -49,17 +55,22 @@ def renderUnfollowArtist():
         return "Error: no artist uri given"
     uri = request.form.get('artisturi')
     try:
-        with open(os.path.join(__location__, "artists.json"), "r") as f:
+        with open(os.path.join(__location__, "artists.json"), "r+") as f:
+            print("[unfollow] opened artists.json")
             artists = json.loads(f.read())
-            f.close()
+            f.seek(0)
+            # print("[unfollow] closed artists.json")
             if uri not in artists:
                 return "Error: User not following artist"
             else:
                 del artists[uri]
                 x = json.dumps(artists)
-                f = open(os.path.join(__location__, "artists.json"), "w")
+                # f = open(os.path.join(__location__, "artists.json"), "w")
+                # print("[unfollow] opened artists.json")
                 f.write(x)
+                f.truncate()
                 f.close()
+                print("[unfollow] closed artists.json")
                 return "Success"
     except EnvironmentError:
         return "Error: Could not unfollow artist"
@@ -69,10 +80,13 @@ def renderFollowedArtists():
     if request.method == 'GET':
         return render_template('index.html')
     try:
+        time.sleep(0.1)
         with open(os.path.join(__location__, "artists.json"), "r") as f:
+            print("[sidenav] opened artists.json")
             artists = json.loads(f.read())
             # print('/followedartists: %s'%artists)
             f.close()
+            print("[sidenav] closed artists.json")
             r = spotify.artists(artists)
             return r
     except EnvironmentError:

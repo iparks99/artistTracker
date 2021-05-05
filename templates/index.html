@@ -65,7 +65,7 @@
             color: #f1f1f1;
         }
 
-        .sidenav > .sidenavcontainer {
+        .sidenav > .sidenavartists > .sidenavcontainer {
             display: flex;
             align-items: center;
             padding: 5px;
@@ -108,6 +108,7 @@
     <div class="sidenav">
         <h1 style='text-align: center;'>Artist Tracker</h1>
         <h3>Followed Artists</h3>
+        <div class="sidenavartists"></div>
     </div>
     <div class="mainview">
         <form id="artistlookup" action="/search" method="post">
@@ -165,11 +166,13 @@
 
             var artisturi = [];
 
+            $(".sidenav > .sidenavartists > .sidenavcontainer").remove();
+
             $.post('/followedartists', {}, (response) => {
-                // console.log(response['artists']);
+                console.log(response['artists']);
                 response['artists'].forEach(function(artist) {
                     artisturi.push(artist['uri']);
-                    $(".sidenav").append($('<div>')
+                    $(".sidenavartists").append($('<div>')
                         .attr('class', 'sidenavcontainer')
                         .append($('<img>')
                             .attr('src', artist['images'][0]['url'])
@@ -186,27 +189,23 @@
 
         function followArtist(uri) {
             $.post('/followedartists/follow', {'artisturi' : uri}, (response) => {
-                if (response === 'Success') {
-                    return true;
-                } else {
-                    return false;
-                }
+                return response === 'Success';
             });
         }
 
         function unfollowArtist(uri) {
             $.post('/followedartists/unfollow', {'artisturi' : uri}, (response) => {
-                return response === 'Success'
+                return response === 'Success';
             });
         }
 
-        function buttonHandler(btn, following, uri) {
-            if (following) {
+        function buttonHandler(btn, uri) {
+            if (btn.innerHTML === 'Follow') {
                 btn.innerHTML = "Unfollow";
-                unfollowArtist(uri);
+                followArtist(uri);
             } else {
                 btn.innerHTML = "Follow";
-                followArtist(uri);
+                unfollowArtist(uri);
             }
         }
     </script>
@@ -243,14 +242,15 @@
                                 .attr('type', 'button');
                         var btnHome = $('<td>').attr('style', 'text-align: center')
                             .append(btn);
-                        btn.click(function() {
-                               buttonHandler(this, artists.includes(response.items[i]['uri']), response.items[i]['uri']);
-                           });
                         if (artists.includes(response.items[i]['uri'])) {
                             btn.append('Unfollow')
                         } else {
                             btn.append('Follow')
                         }
+                        btn.click(function() {
+                               buttonHandler(this, response.items[i]['uri']);
+                               loadSidenav();
+                           });
                         row.append(btnHome);
 
 
