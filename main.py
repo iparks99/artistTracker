@@ -73,7 +73,8 @@ def main():
         if diff != set():
             changes = True
             # TODO: Change how we notify the user of new content
-            print("There are new albums by %s! %s"%(results['items'][0]['artists'][0]['name'], diff))
+            artist_name = spotify.artist(artist)['name']
+            print("There are new albums by %s! %s"%(artist_name, diff))
             album_list.extend(diff)
             artists.update({artist: album_list})
 
