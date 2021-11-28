@@ -169,7 +169,6 @@
             $(".sidenav > .sidenavartists > .sidenavcontainer").remove();
 
             $.post('/followedartists', {}, (response) => {
-                console.log(response['artists']);
                 response['artists'].forEach(function(artist) {
                     artisturi.push(artist['uri']);
                     $(".sidenavartists").append($('<div>')

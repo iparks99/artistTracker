@@ -1,7 +1,7 @@
 import json
 import os
 import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -45,6 +45,7 @@ def loadEnvironment():
             config = json.loads(f.read())
             os.environ['SPOTIPY_CLIENT_ID'] = config['SPOTIPY_CLIENT_ID']
             os.environ['SPOTIPY_CLIENT_SECRET'] = config['SPOTIPY_CLIENT_SECRET']
+            os.environ['SPOTIPY_REDIRECT_URI'] = config['SPOTIPY_REDIRECT_URI']
             f.close()
     except EnvironmentError:
         print("No spotify config file found")
@@ -54,7 +55,10 @@ def main():
     # Initialization
     artists = loadArtists()
     loadEnvironment()
+    scope = "user-library-read user-library-modify"
+    auth_manager = SpotifyOAuth(scope=scope)
     spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+    spoauth = spotipy.Spotify(oauth_manager=auth_manager)
     changes = False
 
     # Get each artists' albums
